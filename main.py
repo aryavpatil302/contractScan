@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -33,9 +34,10 @@ class ScanRequest(BaseModel):
 async def scan_endpoint(body: ScanRequest):
     if not body.text and not body.url:
         raise HTTPException(400, "Provide either 'text' or 'url'")
+    if body.text and body.url:
+        raise HTTPException(400, "Provide either 'text' or 'url', not both")
 
     if body.url:
-        from urllib.parse import urlparse
         parsed = urlparse(body.url)
         if parsed.scheme not in ("http", "https"):
             raise HTTPException(400, "URL must use http or https")

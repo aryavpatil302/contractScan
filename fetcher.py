@@ -15,8 +15,15 @@ async def fetch_url(url: str) -> str:
         "Accept-Language": "en-US,en;q=0.5",
     }
     async with httpx.AsyncClient(timeout=20, follow_redirects=True) as client:
-        r = await client.get(url, headers=headers)
-        r.raise_for_status()
+        try:
+            r = await client.get(url, headers=headers)
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise ValueError(f"HTTP {e.response.status_code} error fetching URL") from e
+        except httpx.TimeoutException:
+            raise ValueError("Request timed out — the site took too long to respond") from None
+        except httpx.RequestError as e:
+            raise ValueError(str(e)) from e
 
     soup = BeautifulSoup(r.text, "html.parser")
 
